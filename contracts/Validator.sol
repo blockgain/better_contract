@@ -1,7 +1,7 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
-import "./LibClaim.sol";
+import "./LibNFT.sol";
 import "hardhat/console.sol";
 
 abstract contract Validator {
@@ -39,12 +39,12 @@ abstract contract Validator {
         );
     }
 
-    function verify(LibClaim.Claim memory claim, bytes memory _signature)
+    function verify(LibNFT.Request memory request, bytes memory _signature)
     public
     view
     returns (address)
     {
-        bytes32 hash = LibClaim.hash(claim);
+        bytes32 hash = LibNFT.hash(request);
         return ECDSA.toTypedDataHash(DOMAIN_SEPARATOR, hash).recover(_signature);
     }
 }

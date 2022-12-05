@@ -7,7 +7,7 @@ import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 
-import "./LibClaim.sol";
+import "./LibNFT.sol";
 import "./Validator.sol";
 
 contract BetterFan is ERC1155, Ownable, Pausable, ERC1155Burnable, Validator {
@@ -15,10 +15,10 @@ contract BetterFan is ERC1155, Ownable, Pausable, ERC1155Burnable, Validator {
     mapping(bytes => uint256) public processed;
 
     function contractURI() public view returns (string memory) {
-        return "https://dev-api.better.fan/metadata";
+        return "https://api.better.fan/metadata";
     }
 
-    constructor() ERC1155("https://dev-api.better.fan/tokens/0x{id}.json") {
+    constructor() ERC1155("https://api.better.fan/tokens/0x{id}.json") {
         __Validator_init_unchained();
     }
 
@@ -34,26 +34,26 @@ contract BetterFan is ERC1155, Ownable, Pausable, ERC1155Burnable, Validator {
         _unpause();
     }
 
-    function claim(LibClaim.Claim memory claim, bytes memory signature) external whenNotPaused {
-        require(owner() == verify(claim, signature), "Wrong signature!");
-        checkRequest(claim, signature);
+    function signMint(LibNFT.Request memory request, bytes memory signature) external whenNotPaused {
+        require(owner() == verify(request, signature), "Wrong signature!");
+        checkRequest(request, signature);
 
-        _mint(claim.account, claim.id, claim.amount, new bytes(0));
+        _mint(request.account, request.id, request.amount, new bytes(0));
     }
 
-    function claimBatch(LibClaim.Claim[] memory claims, bytes[] memory signatures) external whenNotPaused {
-        for(uint i=0; i<claims.length; i++){
-            require(owner() == verify(claims[i], signatures[i]), "Wrong signature!");
-            checkRequest(claims[i], signatures[i]);
-            _mint(claims[i].account, claims[i].id, claims[i].amount, new bytes(0));
+    function signMintBatch(LibNFT.Request[] memory requests, bytes[] memory signatures) external whenNotPaused {
+        for(uint i=0; i<requests.length; i++){
+            require(owner() == verify(requests[i], signatures[i]), "Wrong signature!");
+            checkRequest(requests[i], signatures[i]);
+            _mint(requests[i].account, requests[i].id, requests[i].amount, new bytes(0));
         }
     }
 
-    function checkRequest(LibClaim.Claim memory claim, bytes memory signature)
+    function checkRequest(LibNFT.Request memory request, bytes memory signature)
     internal
     {
         require(processed[signature] == 0, "This transaction already processed!");
-        LibClaim.validate(claim);
+        LibNFT.validate(request);
         processed[signature] = 1;
     }
 
