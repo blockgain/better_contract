@@ -109,8 +109,8 @@ describe("BetterWallet", function () {
     // owner set
     await nftContract.transferOwnership(walletContract.address)
 
-    const con3 = await deployERC20();
-    btbContract = con3.btbContract
+    const erc20 = await deployERC20();
+    btbContract = erc20.btbContract
     // owner set
     await btbContract.transferOwnership(walletContract.address)
   });
@@ -197,7 +197,7 @@ describe("BetterWallet", function () {
         to: walletContract.address,
         token: nftContract.address,
         id: 1,
-        amount: 1,
+        amount: 2,
         tokenType: 4,
         start: lastBlock,
         end: lastBlock * 2,
@@ -223,6 +223,22 @@ describe("BetterWallet", function () {
       await walletContract.withdraw(_request, _signature)
       const __newBalance = (await nftContract.balanceOf(_request.to, _request.id)).toNumber()
       await expect(__newBalance).equal(__beforeBalance+_request.amount);
+
+      // Burn
+      const burn_request = {
+        to: walletContract.address,
+        token: nftContract.address,
+        id: 1,
+        amount: 1,
+        tokenType: 6,
+        start: lastBlock,
+        end: lastBlock * 2,
+      }
+      const burn_signature = await signData(burn_request)
+      const burn_beforeBalance = (await nftContract.balanceOf(burn_request.to, burn_request.id)).toNumber()
+      await walletContract.withdraw(burn_request, burn_signature)
+      const burn_newBalance = (await nftContract.balanceOf(burn_request.to, burn_request.id)).toNumber()
+      await expect(burn_newBalance).equal(burn_beforeBalance-burn_request.amount);
     });
   });
 
