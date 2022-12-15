@@ -5,122 +5,226 @@ const {
 const { anyValue } = require("@nomicfoundation/hardhat-chai-matchers/withArgs");
 const { expect } = require("chai");
 
-describe("Lock", function () {
-  // We define a fixture to reuse the same setup in every test.
-  // We use loadFixture to run this setup once, snapshot that state,
-  // and reset Hardhat Network to that snapshot in every test.
-  async function deployOneYearLockFixture() {
-    const ONE_YEAR_IN_SECS = 365 * 24 * 60 * 60;
-    const ONE_GWEI = 1_000_000_000;
+const tokens = {
+  chain: '0x0000000000000000000000000000000000000000',
+  btb: '0x0000000000000000000000000000000000000000',
+  bff: '0x0000000000000000000000000000000000000000',
+}
 
-    const lockedAmount = ONE_GWEI;
-    const unlockTime = (await time.latest()) + ONE_YEAR_IN_SECS;
+function toEther(number) {
+  return hre.ethers.utils.parseEther(number.toString());
+}
 
-    // Contracts are deployed using the first signer/account by default
+
+describe("BetterWallet", function () {
+  async function deployWallet() {
     const [owner, otherAccount] = await ethers.getSigners();
+    const BetterWallet = await ethers.getContractFactory("BetterWallet");
+    const walletContract = await BetterWallet.deploy();
+    async function signData(data) {
+      const domain = {
+        name: 'Better Fan Wallet',
+        version: '1',
+        verifyingContract: walletContract.address,
+        chainId: 31337,
+      };
 
-    const Lock = await ethers.getContractFactory("Lock");
-    const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+      const types = {
+        Request: [
+          { name: 'to', type: 'address' },
+          { name: 'token', type: 'address' },
+          { name: 'id', type: 'uint256' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'tokenType', type: 'uint8' },
+          { name: 'start', type: 'uint256' },
+          { name: 'end', type: 'uint256' },
+        ],
+      };
 
-    return { lock, unlockTime, lockedAmount, owner, otherAccount };
+      return await owner._signTypedData(domain, types, data);
+    }
+    return { walletContract, owner, otherAccount, signData };
+  }
+  async function deployNFT(factory = 'BetterFan', address) {
+    const [owner, otherAccount] = await ethers.getSigners();
+    const BetterWallet = await ethers.getContractFactory(factory);
+    const nftContract = await BetterWallet.deploy();
+    async function signData(data) {
+      const domain = {
+        name: 'Better Fan',
+        version: '1',
+        verifyingContract: nftContract.address,
+        chainId: 31337,
+      };
+
+      const types = {
+        Request: [
+          { name: 'account', type: 'address' },
+          { name: 'id', type: 'uint256' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'start', type: 'uint256' },
+          { name: 'end', type: 'uint256' },
+        ],
+      };
+
+      return await owner._signTypedData(domain, types, data);
+    }
+    return { nftContract, owner, otherAccount, signData };
+  }
+  async function deployERC20(factory = 'BTB', address) {
+    const [owner, otherAccount] = await ethers.getSigners();
+    const BetterWallet = await ethers.getContractFactory(factory);
+    const btbContract = await BetterWallet.deploy();
+    async function signData(data) {
+      const domain = {
+        name: 'Better Fan',
+        version: '1',
+        verifyingContract: btbContract.address,
+        chainId: 31337,
+      };
+
+      const types = {
+        Request: [
+          { name: 'account', type: 'address' },
+          { name: 'id', type: 'uint256' },
+          { name: 'amount', type: 'uint256' },
+          { name: 'start', type: 'uint256' },
+          { name: 'end', type: 'uint256' },
+        ],
+      };
+
+      return await owner._signTypedData(domain, types, data);
+    }
+    return { btbContract, owner, otherAccount, signData };
   }
 
-  describe("Deployment", function () {
-    it("Should set the right unlockTime", async function () {
-      const { lock, unlockTime } = await loadFixture(deployOneYearLockFixture);
+  beforeEach(async () => {
+    let wal = await deployWallet();
+    owner = wal.owner
+    otherAccount = wal.otherAccount
+    walletContract = wal.walletContract
+    signData = wal.signData
+    const con2 = await deployNFT();
+    nftContract = con2.nftContract
+    // owner set
+    await nftContract.transferOwnership(walletContract.address)
 
-      expect(await lock.unlockTime()).to.equal(unlockTime);
+    const con3 = await deployERC20();
+    btbContract = con3.btbContract
+    // owner set
+    await btbContract.transferOwnership(walletContract.address)
+  });
+
+  describe("Transfer", function () {
+
+    it("Chain token transfer", async function () {
+      const {owner, walletContract, signData} = await loadFixture(deployWallet);
+
+      const lastBlock = await time.latest()
+
+      const request = {
+        to: owner.address,
+        token: tokens['chain'],
+        id: 0,
+        amount: toEther('1'),
+        tokenType: 0,
+        start: lastBlock,
+        end: lastBlock * 2,
+      }
+
+      const signature = await signData(request)
+      await expect(walletContract.withdraw(request, signature)).to.be.reverted;
     });
 
-    it("Should set the right owner", async function () {
-      const { lock, owner } = await loadFixture(deployOneYearLockFixture);
 
-      expect(await lock.owner()).to.equal(owner.address);
+    it("ERC20", async function () {
+      const lastBlock = await time.latest()
+
+      // Mint
+      const request = {
+        to: walletContract.address,
+        token: btbContract.address,
+        id: 0,
+        amount: 10,
+        tokenType: 1,
+        start: lastBlock,
+        end: lastBlock * 2,
+      }
+      const signature = await signData(request)
+      const _beforeBalance = (await btbContract.balanceOf(request.to)).toNumber()
+      await walletContract.withdraw(request, signature)
+      const _newBalance = (await btbContract.balanceOf(request.to)).toNumber()
+      await expect(_newBalance).equal(_beforeBalance+request.amount);
+
+      // Transfer
+      const _request = {
+        to: otherAccount.address,
+        token: btbContract.address,
+        id: 0,
+        amount: 1,
+        tokenType: 2,
+        start: lastBlock,
+        end: lastBlock * 2,
+      }
+      const _signature = await signData(_request)
+      const __beforeBalance = (await btbContract.balanceOf(_request.to)).toNumber()
+      await walletContract.withdraw(_request, _signature)
+      const __newBalance = (await btbContract.balanceOf(_request.to)).toNumber()
+      await expect(__newBalance).equal(__beforeBalance+_request.amount);
+
+
+      // BURN
+      const burn_request = {
+        to: otherAccount.address,
+        token: btbContract.address,
+        id: 0,
+        amount: 1,
+        tokenType: 3,
+        start: lastBlock,
+        end: lastBlock * 2,
+      }
+      const burn_signature = await signData(burn_request)
+      const burn_beforeBalance = (await btbContract.balanceOf(walletContract.address)).toNumber()
+      await walletContract.withdraw(burn_request, burn_signature)
+      const burn_newBalance = (await btbContract.balanceOf(walletContract.address)).toNumber()
+      await expect(burn_newBalance).equal(burn_beforeBalance-burn_request.amount);
     });
+    it("ERC155", async function () {
+      const lastBlock = await time.latest()
 
-    it("Should receive and store the funds to lock", async function () {
-      const { lock, lockedAmount } = await loadFixture(
-        deployOneYearLockFixture
-      );
+      // Mint
+      const request = {
+        to: walletContract.address,
+        token: nftContract.address,
+        id: 1,
+        amount: 1,
+        tokenType: 4,
+        start: lastBlock,
+        end: lastBlock * 2,
+      }
+      const signature = await signData(request)
+      const _beforeBalance = (await nftContract.balanceOf(request.to, request.id)).toNumber()
+      await walletContract.withdraw(request, signature)
+      const _newBalance = (await nftContract.balanceOf(request.to, request.id)).toNumber()
+      await expect(_newBalance).equal(_beforeBalance+request.amount);
 
-      expect(await ethers.provider.getBalance(lock.address)).to.equal(
-        lockedAmount
-      );
-    });
-
-    it("Should fail if the unlockTime is not in the future", async function () {
-      // We don't use the fixture here because we want a different deployment
-      const latestTime = await time.latest();
-      const Lock = await ethers.getContractFactory("Lock");
-      await expect(Lock.deploy(latestTime, { value: 1 })).to.be.revertedWith(
-        "Unlock time should be in the future"
-      );
+      // Transfer
+      const _request = {
+        to: otherAccount.address,
+        token: nftContract.address,
+        id: 1,
+        amount: 1,
+        tokenType: 5,
+        start: lastBlock,
+        end: lastBlock * 2,
+      }
+      const _signature = await signData(_request)
+      const __beforeBalance = (await nftContract.balanceOf(_request.to, _request.id)).toNumber()
+      await walletContract.withdraw(_request, _signature)
+      const __newBalance = (await nftContract.balanceOf(_request.to, _request.id)).toNumber()
+      await expect(__newBalance).equal(__beforeBalance+_request.amount);
     });
   });
 
-  describe("Withdrawals", function () {
-    describe("Validations", function () {
-      it("Should revert with the right error if called too soon", async function () {
-        const { lock } = await loadFixture(deployOneYearLockFixture);
 
-        await expect(lock.withdraw()).to.be.revertedWith(
-          "You can't withdraw yet"
-        );
-      });
-
-      it("Should revert with the right error if called from another account", async function () {
-        const { lock, unlockTime, otherAccount } = await loadFixture(
-          deployOneYearLockFixture
-        );
-
-        // We can increase the time in Hardhat Network
-        await time.increaseTo(unlockTime);
-
-        // We use lock.connect() to send a transaction from another account
-        await expect(lock.connect(otherAccount).withdraw()).to.be.revertedWith(
-          "You aren't the owner"
-        );
-      });
-
-      it("Shouldn't fail if the unlockTime has arrived and the owner calls it", async function () {
-        const { lock, unlockTime } = await loadFixture(
-          deployOneYearLockFixture
-        );
-
-        // Transactions are sent using the first signer by default
-        await time.increaseTo(unlockTime);
-
-        await expect(lock.withdraw()).not.to.be.reverted;
-      });
-    });
-
-    describe("Events", function () {
-      it("Should emit an event on withdrawals", async function () {
-        const { lock, unlockTime, lockedAmount } = await loadFixture(
-          deployOneYearLockFixture
-        );
-
-        await time.increaseTo(unlockTime);
-
-        await expect(lock.withdraw())
-          .to.emit(lock, "Withdrawal")
-          .withArgs(lockedAmount, anyValue); // We accept any value as `when` arg
-      });
-    });
-
-    describe("Transfers", function () {
-      it("Should transfer the funds to the owner", async function () {
-        const { lock, unlockTime, lockedAmount, owner } = await loadFixture(
-          deployOneYearLockFixture
-        );
-
-        await time.increaseTo(unlockTime);
-
-        await expect(lock.withdraw()).to.changeEtherBalances(
-          [owner, lock],
-          [lockedAmount, -lockedAmount]
-        );
-      });
-    });
-  });
 });

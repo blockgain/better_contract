@@ -14,6 +14,10 @@ module.exports = {
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
       accounts: [GOERLI_PRIVATE_KEY]
-    }
+    },
+    bsc: {
+      url: `https://bsc-dataseed.binance.org`,
+      accounts: [GOERLI_PRIVATE_KEY]
+    },
   }
 }
