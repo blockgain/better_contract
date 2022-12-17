@@ -6,9 +6,7 @@ import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract BTB is ERC20, ERC20Burnable, Ownable {
-    constructor() ERC20("BetterThanBet", "BTB") {
-        _mint(msg.sender, 1000 * 10 ** decimals());
-    }
+    constructor() ERC20("BetterThanBet", "BTB") {}
 
     function mint(address to, uint256 amount) public onlyOwner {
         _mint(to, amount);

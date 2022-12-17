@@ -8,10 +8,10 @@ const hre = require("hardhat");
 
 async function main() {
 
-  const BetterFan = await hre.ethers.getContractFactory("BetterWallet");
-  const deployContract = await BetterFan.deploy();
+  const BetterWallet = await hre.ethers.getContractFactory("BetterWallet");
+  const walletContract = await BetterWallet.deploy();
+  console.log(walletContract.address);
 
-  console.log(deployContract.address);
 }
 
 // We recommend this pattern to be able to use async/await everywhere

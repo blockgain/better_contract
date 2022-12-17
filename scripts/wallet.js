@@ -4,9 +4,9 @@ const { ethers, upgrades } = require("hardhat");
 
 async function main() {
   const BetterFan = await ethers.getContractFactory("BetterFan");
-  const hardhatToken = await BetterFan.deploy();
+  const wallet = await BetterFan.deploy();
 
-
+  console.log(wallet)
 }
 
 main();
