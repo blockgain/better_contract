@@ -156,7 +156,7 @@ contract BetterWallet is Ownable, Validator, ERC1155Holder {
         processed[signature] = 1;
     }
 
-    event Deposit(address, uint256);
+    event Deposit(address sender, uint256 value);
     function deposit() payable external {
         emit Deposit(msg.sender, msg.value);
     }

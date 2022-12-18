@@ -40,7 +40,7 @@ async function main() {
         id: 0,
         amount: 0,
         tokenType: 7,
-        start: moment().unix(),
+        start: moment().subtract(1, 'minutes').unix(),
         end: moment().add(1, 'days').unix(),
     }
     const signature = await signData(request)
