@@ -10,6 +10,7 @@
     "deploy": "npx hardhat run scripts/deploy.js --network bsc",
     "deploy-goerli": "npx hardhat run scripts/deploy.js --network goerli",
     "deploy-wallet": "npx hardhat run scripts/deploy-wallet.js --network goerli",
+    "deploy-btb": "npx hardhat run scripts/deploy-btb.js --network goerli",
     "console": "npx hardhat console"
   },
   "keywords": [],

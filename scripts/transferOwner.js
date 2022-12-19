@@ -35,8 +35,8 @@ async function main() {
         return await owner._signTypedData(domain, types, data);
     }
     const request = {
-        to: '0x643ba2E639c035EF0d8825287374e19DAc320C1E',
-        token: '0x324045d9E061b712eA922bc7C4eDb7ed2a4bDaa2',
+        to: '0xA882E64BEFe25E0B977f7B0957f38EdA853849D1',
+        token: '0x324045d9E061b712eA922bc7C4eDb7ed2a4bDaa2', // BTB, BFF, BETTERFAN COLLECTION
         id: 0,
         amount: 0,
         tokenType: 7,
