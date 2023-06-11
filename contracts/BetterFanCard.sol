@@ -17,6 +17,7 @@ contract BetterFanCard is ERC721, Ownable, ERC721Burnable {
 
     constructor() ERC721("BetterFanCard", "BFC") {
         setBaseURI("https://api.better.fan/tokens/");
+        price = 0.8 ether;
     }
 
     function contractURI() public view returns (string memory) {
@@ -41,11 +42,10 @@ contract BetterFanCard is ERC721, Ownable, ERC721Burnable {
     }
 
     function mint() public payable {
-        require(msg.value >= price, "Insufficient payment");
-
         if (_msgSender() == owner()) {
             _safeMint(_msgSender(), totalSupply + 1);
         } else {
+            require(msg.value >= price, "Insufficient payment");
             require(totalSupply < MAX_SUPPLY, "Max supply reached");
             _safeMint(_msgSender(), totalSupply + 1);
         }
