@@ -14,9 +14,8 @@ contract BetterFanCard is ERC721, Ownable, ERC721Burnable {
 
     using Strings for uint256;
 
-
     constructor() ERC721("BetterFanCard", "BFC") {
-        setBaseURI("https://api.better.fan/tokens/");
+        setBaseURI("https://api.better.fan/assets/");
         price = 0.8 ether;
     }
 
