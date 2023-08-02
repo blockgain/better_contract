@@ -41,13 +41,16 @@ contract BetterFanCard is ERC721, Ownable, ERC721Burnable {
     }
 
     function mint() public payable {
-        if (_msgSender() == owner()) {
-            _safeMint(_msgSender(), totalSupply + 1);
-        } else {
-            require(msg.value >= price, "Insufficient payment");
-            require(totalSupply < MAX_SUPPLY, "Max supply reached");
-            _safeMint(_msgSender(), totalSupply + 1);
-        }
+        require(msg.value >= price, "Insufficient payment");
+        require(totalSupply < MAX_SUPPLY, "Max supply reached");
+        _safeMint(_msgSender(), totalSupply + 1);
         totalSupply++;
     }
+
+    function mint(address to, uint256 tokenId) public onlyOwner {
+        _safeMint(to, tokenId);
+        totalSupply++;
+    }
+
+
 }

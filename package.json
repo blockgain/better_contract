@@ -7,10 +7,9 @@
     "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "node": "npx hardhat node",
-    "deploy": "npx hardhat run scripts/deploy.js --network bsc",
-    "deploy-goerli": "npx hardhat run scripts/deploy.js --network goerli",
-    "deploy-wallet": "npx hardhat run scripts/deploy-wallet.js --network goerli",
-    "deploy-btb": "npx hardhat run scripts/deploy-btb.js --network goerli",
+    "deploy": "npx hardhat run scripts/deploy.js",
+    "deploy-wallet": "npx hardhat run scripts/deploy-wallet.js --network localhost",
+    "deploy-btb": "npx hardhat run scripts/deploy-btb.js --network localhost",
     "console": "npx hardhat console"
   },
   "keywords": [],

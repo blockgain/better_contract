@@ -12,10 +12,21 @@ module.exports = {
   solidity: "0.8.9",
   //defaultNetwork: "goerli",
   networks: {
+    hardhat: {
+      chainId: 1337,
+      accounts: [
+        {
+          privateKey: GOERLI_PRIVATE_KEY,
+          balance: '10000000000000000000000000'
+        }
+      ]
+    },
+    /*
     goerli: {
       url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
       accounts: [GOERLI_PRIVATE_KEY]
     },
+     */
     bsc: {
       url: `https://bsc-dataseed.binance.org`,
       accounts: []

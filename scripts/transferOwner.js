@@ -10,7 +10,7 @@ const moment = require('moment')
 async function main() {
     const [owner, otherAccount] = await hre.ethers.getSigners();
     const BetterWallet = await hre.ethers.getContractFactory("BetterWallet");
-    const contract = BetterWallet.attach('0x643ba2E639c035EF0d8825287374e19DAc320C1E')
+    const contract = BetterWallet.attach('0xc720FE3E061e5d222C77e9C9b81d275c6dD9b5bf')
 
     const chainId = await contract.signer.getChainId()
 
