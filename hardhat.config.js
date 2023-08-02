@@ -3,9 +3,7 @@ require('dotenv').config()
 require("@nomicfoundation/hardhat-toolbox");
 require('@openzeppelin/hardhat-upgrades');
 
-const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
-// Beware: NEVER put real Ether into testing accounts
-const GOERLI_PRIVATE_KEY = process.env.GOERLI_PRIVATE_KEY;
+const privateKey = '2aa78830ce8a8e1f92c7ca48806ee2aeb97791be4b303040cfa1d55117cdd773'
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -13,20 +11,17 @@ module.exports = {
   //defaultNetwork: "goerli",
   networks: {
     hardhat: {
-      chainId: 1337,
+      forking: {
+        url: "https://sepolia.infura.io/v3/b4b652cc9de242029fd57c433dbf311c",
+        blockNumber: 4010597,
+      },
       accounts: [
         {
-          privateKey: GOERLI_PRIVATE_KEY,
-          balance: '10000000000000000000000000'
+          privateKey,
+          balance: '100000000000000000000000000000'
         }
       ]
     },
-    /*
-    goerli: {
-      url: `https://eth-goerli.g.alchemy.com/v2/${ALCHEMY_API_KEY}`,
-      accounts: [GOERLI_PRIVATE_KEY]
-    },
-     */
     bsc: {
       url: `https://bsc-dataseed.binance.org`,
       accounts: []
